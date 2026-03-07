@@ -85,6 +85,7 @@ const micStatusIndicator = document.getElementById('micStatusIndicator');
 
 // Mobile
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenuBtnEmpty = document.getElementById('mobileMenuBtnEmpty');
 const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
 
@@ -457,6 +458,7 @@ function toggleMobileSidebar(show) {
     }
 }
 mobileMenuBtn.addEventListener('click', () => toggleMobileSidebar(true));
+if (mobileMenuBtnEmpty) mobileMenuBtnEmpty.addEventListener('click', () => toggleMobileSidebar(true));
 sidebarOverlay.addEventListener('click', () => toggleMobileSidebar(false));
 
 // ============ Boot ============

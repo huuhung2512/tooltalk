@@ -361,6 +361,16 @@ body {
     margin-bottom: 8px;
 }
 
+.empty-state-btn {
+    display: none;
+    margin-bottom: 24px;
+    background: var(--accent);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .chat-header {
     height: 72px;
     padding: 0 24px;
@@ -672,6 +682,10 @@ body {
 
     .mobile-menu-btn {
         display: block;
+    }
+
+    .empty-state-btn {
+        display: inline-block;
     }
 
     .sidebar-overlay {
