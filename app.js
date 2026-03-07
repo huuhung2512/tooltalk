@@ -49,6 +49,7 @@ let joinedRooms = []; // List of room IDs
 
 let recognition = null;
 let isRecording = false;
+let baseTextForSpeech = ''; // To preserve text typed before recording
 
 // ============ DOM Elements ============
 
@@ -403,17 +404,22 @@ function initSpeech() {
     recognition.onresult = (event) => {
         let finalTranscript = '';
         let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-            else interimTranscript += event.results[i][0].transcript;
+
+        // Loop through all results from index 0 to rebuild the string
+        for (let i = 0; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
         }
 
+        chatInput.value = baseTextForSpeech + finalTranscript;
+
         if (interimTranscript) {
-            chatInput.value = '';
             micStatusIndicator.textContent = `🎤 ${interimTranscript}`;
-        }
-        if (finalTranscript) {
-            chatInput.value += (chatInput.value ? ' ' : '') + finalTranscript.trim();
+        } else {
+            micStatusIndicator.textContent = `🎤 Đang nghe...`;
         }
     };
 
@@ -424,12 +430,16 @@ function initSpeech() {
 function startRecording() {
     if (!recognition || !currentRoomId) return;
     try {
+        // Save existing text
+        baseTextForSpeech = chatInput.value.trim();
+        if (baseTextForSpeech) baseTextForSpeech += ' ';
+
         recognition.start();
         isRecording = true;
         micBtn.classList.add('recording');
         chatInput.classList.add('hidden');
         micStatusIndicator.classList.remove('hidden');
-        micStatusIndicator.textContent = '🎤 Đang nghe...';
+        micStatusIndicator.textContent = '🎤 Đang nghe...'; // Initial state
     } catch (e) {
         console.error('Mic error:', e);
     }
