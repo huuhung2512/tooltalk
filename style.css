@@ -40,7 +40,7 @@ body {
     font-family: var(--font);
     background: var(--bg-app);
     color: var(--text-main);
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
@@ -64,8 +64,9 @@ body {
     background: var(--bg-sidebar);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-lg);
-    padding: 40px;
-    width: 400px;
+    padding: 32px 24px;
+    width: 90%;
+    max-width: 400px;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
@@ -146,8 +147,9 @@ body {
 /* ============ Layout ============ */
 .app {
     display: flex;
-    height: 100vh;
+    height: 100dvh;
     width: 100%;
+    overflow: hidden;
 }
 
 /* ============ Sidebar ============ */
@@ -661,11 +663,11 @@ body {
         top: 0;
         bottom: 0;
         z-index: 100;
-        transition: 0.3s;
+        transition: transform 0.3s ease;
     }
 
     .sidebar.open {
-        left: 0;
+        transform: translateX(320px);
     }
 
     .mobile-menu-btn {
@@ -675,21 +677,92 @@ body {
     .sidebar-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
         z-index: 90;
         display: block;
+        backdrop-filter: blur(2px);
     }
 
-    .chat-input-area {
-        padding: 12px 16px;
-        gap: 8px;
+    .chat-header {
+        height: 60px;
+        padding: 0 12px;
+    }
+
+    .room-info h2 {
+        font-size: 15px;
+    }
+
+    .room-meta {
+        font-size: 11px;
+    }
+
+    .room-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
 
     .chat-messages {
         padding: 16px 12px;
+        gap: 16px;
     }
 
     .msg-row {
-        max-width: 85%;
+        max-width: 90%;
+        gap: 8px;
+    }
+
+    .msg-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+
+    .msg-bubble {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    .msg-translated {
+        font-size: 13px;
+    }
+
+    .chat-input-area {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .input-wrapper {
+        padding: 4px 12px;
+    }
+
+    .input-wrapper input {
+        font-size: 14px;
+        padding: 10px 0;
+    }
+
+    .mic-btn,
+    .send-btn {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+    }
+
+    .mic-status {
+        font-size: 12px;
+        left: 12px;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+    }
+
+    .empty-state h2 {
+        font-size: 20px;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+        padding: 0 20px;
     }
 }
