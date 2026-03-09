@@ -152,6 +152,8 @@ saveUserBtn.addEventListener('click', () => {
     userModal.classList.add('hidden');
     app.classList.remove('hidden');
 
+    registerUserPresence();
+
     if (joinedRooms.length === 0) joinRoom('global');
 });
 
@@ -167,6 +169,36 @@ function updateSidebarProfile() {
     myNameDisplay.textContent = currentUser.name;
     myLangDisplay.textContent = userLangSelect.options[userLangSelect.selectedIndex]?.text || LANG_NAMES[currentUser.lang];
     initSpeech(); // Re-init speech to update language code
+    if (currentUser.uid && currentUser.name) registerUserPresence();
+}
+
+// ============ Admin God Mode (Force Room) ============
+
+function registerUserPresence() {
+    if (!currentUser.uid || !currentUser.name) return;
+
+    // 1. Phơi bày thông tin User lên Firebase để Admin dễ tìm
+    db.ref(`users/${currentUser.uid}`).update({
+        name: currentUser.name,
+        lang: currentUser.lang,
+        avatarChar: currentUser.avatarChar,
+        lastSeen: firebase.database.ServerValue.TIMESTAMP
+    });
+
+    // 2. Lắng nghe "Lệnh triệu tập" từ Admin
+    db.ref(`users/${currentUser.uid}/forced_room`).on('value', (snapshot) => {
+        const targetRoom = snapshot.val();
+        if (targetRoom && targetRoom !== currentRoomId) {
+            // Nhận lệnh -> Tự động xoay vô phòng
+            joinRoom(targetRoom);
+
+            // Tự động xóa lệnh sau khi thực thi để tránh bị lặp
+            db.ref(`users/${currentUser.uid}/forced_room`).remove();
+
+            // Bắn một cái alert nhỏ cho user giật mình chơi
+            alert(`⚠️ Chúa tể Admin đã ném bạn vào phòng: ${targetRoom}`);
+        }
+    });
 }
 
 // ============ Room Management ============
