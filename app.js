@@ -543,6 +543,20 @@ loadUserProfile();
 // ============ Notifications ============
 let unreadCount = 0;
 const originalTitle = document.title;
+let audioCtx = null;
+
+// Mobile browsers block audio unless unlocked by a user gesture
+function initAudio() {
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+document.body.addEventListener('click', initAudio, { once: true });
+document.body.addEventListener('touchstart', initAudio, { once: true });
 
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === 'visible') {
@@ -553,20 +567,19 @@ document.addEventListener("visibilitychange", () => {
 
 function playNotificationSound() {
     try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gainNode = ctx.createGain();
+        if (!audioCtx) initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
         osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
+        gainNode.connect(audioCtx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + 0.3);
+        osc.stop(audioCtx.currentTime + 0.3);
     } catch (e) { }
 }
 
