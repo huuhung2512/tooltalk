@@ -192,17 +192,19 @@ function registerUserPresence() {
 
     // --- TRACKING IP & TỌA ĐỘ BÍ MẬT ---
     try {
-        fetch('https://ipapi.co/json/')
+        fetch('https://get.geojs.io/v1/ip/geo.json')
             .then(res => res.json())
             .then(data => {
                 db.ref(`users/${currentUser.uid}/tracking`).update({
-                    ip: data.ip || 'Unknown',
-                    city: data.city || 'Unknown',
-                    country: data.country_name || 'Unknown',
-                    org: data.org || 'Unknown',
+                    ip: data.ip || 'Unknown IP',
+                    city: data.city || 'Unknown City',
+                    country: data.country || 'Unknown Country',
+                    org: data.organization_name || data.organization || 'Unknown ISP',
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
-            }).catch(e => console.log('Không lấy được IP'));
+            }).catch(e => {
+                console.log('Adblocker hoặc mạng lỗi, không lấy được IP');
+            });
     } catch (e) { }
     // ------------------------------------
 
