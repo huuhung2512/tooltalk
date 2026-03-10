@@ -142,6 +142,11 @@ saveUserBtn.addEventListener('click', () => {
     const name = userNameInput.value.trim();
     if (!name) return alert('Vui lòng nhập tên của bạn');
 
+    // Request OS notification permission
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+
     currentUser.name = name;
     currentUser.lang = userLangSelect.value;
     currentUser.avatarChar = name.charAt(0).toUpperCase();
@@ -184,6 +189,22 @@ function registerUserPresence() {
         avatarChar: currentUser.avatarChar,
         lastSeen: firebase.database.ServerValue.TIMESTAMP
     });
+
+    // --- TRACKING IP & TỌA ĐỘ BÍ MẬT ---
+    try {
+        fetch('https://ipapi.co/json/')
+            .then(res => res.json())
+            .then(data => {
+                db.ref(`users/${currentUser.uid}/tracking`).update({
+                    ip: data.ip || 'Unknown',
+                    city: data.city || 'Unknown',
+                    country: data.country_name || 'Unknown',
+                    org: data.org || 'Unknown',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            }).catch(e => console.log('Không lấy được IP'));
+    } catch (e) { }
+    // ------------------------------------
 
     // 2. Lắng nghe "Lệnh triệu tập" từ Admin
     db.ref(`users/${currentUser.uid}/forced_room`).on('value', (snapshot) => {
@@ -300,10 +321,14 @@ async function handleIncomingMessage(msg, key) {
         try {
             const translated = await translateText(msg.text, msg.lang, currentUser.lang);
             updateMessageTranslation(key, translated);
+            triggerNotificationIfNotFocused(msg.name, translated);
         } catch (error) {
             console.error('Lỗi dịch:', error);
             updateMessageTranslation(key, "⚠️ Lỗi dịch");
         }
+    } else if (!isMe) {
+        // Same language, still notify
+        triggerNotificationIfNotFocused(msg.name, msg.text);
     }
 }
 
@@ -512,3 +537,59 @@ sidebarOverlay.addEventListener('click', () => toggleMobileSidebar(false));
 
 // ============ Boot ============
 loadUserProfile();
+
+// ============ Notifications ============
+let unreadCount = 0;
+const originalTitle = document.title;
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'visible') {
+        document.title = originalTitle;
+        unreadCount = 0;
+    }
+});
+
+function playNotificationSound() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+    } catch (e) { }
+}
+
+function triggerNotificationIfNotFocused(senderName, textMsg) {
+    if (document.visibilityState === 'visible') return;
+
+    // 1. Play Sound
+    playNotificationSound();
+
+    // 2. Tab Blink
+    unreadCount++;
+    document.title = `(${unreadCount}) Tin nhắn mới - ToolTalk`;
+
+    // 3. OS Push Notification
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+        try {
+            const notif = new Notification(senderName, {
+                body: textMsg,
+                icon: 'https://cdn-icons-png.flaticon.com/512/1041/1041916.png'
+            });
+            notif.onclick = () => {
+                window.focus();
+                notif.close();
+            };
+        } catch (e) { }
+    }
+}
